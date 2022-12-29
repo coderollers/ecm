@@ -44,15 +44,18 @@ func Vault() gin.HandlerFunc {
 			if err != nil {
 				log.Errorf("error in approle auth: %s", err.Error())
 				c.AbortWithStatusJSON(403, struct{ Error error }{Error: err})
+				return
 			}
 			authInfo, err = client.Auth().Login(c.Request.Context(), appRoleAuth)
 			if err != nil {
 				log.Errorf("error during approle login: %s", err.Error())
 				c.AbortWithStatusJSON(403, struct{ Error error }{Error: err})
+				return
 			}
 			if authInfo == nil {
 				log.Errorf("no approle info was returned after login")
 				c.AbortWithStatusJSON(403, struct{ Error error }{Error: err})
+				return
 			}
 		}
 		log.Debugf("vault client created successfully")
