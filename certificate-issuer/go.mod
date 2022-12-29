@@ -2,19 +2,15 @@ module certificate-issuer
 
 go 1.18
 
-//replace github.com/coderollers/go-logger => ../../../go-logger
-replace github.com/coderollers/go-utils => ../../../go-utils
-
 require (
 	github.com/coderollers/go-logger v0.4.0
 	github.com/coderollers/go-stats v0.1.0
-	github.com/coderollers/go-utils v0.3.3
+	github.com/coderollers/go-utils v0.4.0
 	github.com/gin-gonic/gin v1.8.2
 	github.com/go-acme/lego/v4 v4.9.1
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/vault/api v1.8.2
 	github.com/hashicorp/vault/api/auth/approle v0.3.0
-	github.com/miekg/dns v1.1.50
 	github.com/spf13/pflag v1.0.5
 	github.com/swaggo/files v1.0.0
 	github.com/swaggo/gin-swagger v1.5.3
@@ -76,6 +72,7 @@ require (
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/miekg/dns v1.1.50 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect

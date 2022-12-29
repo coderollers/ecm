@@ -46,6 +46,8 @@ github.com/coderollers/go-logger v0.4.0 h1:l+KbMcNcdWQB8DeJuOPU1nFiQ05C7/KYH9tKa
 github.com/coderollers/go-logger v0.4.0/go.mod h1:pvoyW/NLDKviLF9Y4qeajvnYiy4D4OQpqi1b/gND0Uw=
 github.com/coderollers/go-stats v0.1.0 h1:A6vESQvTQ2+RjUFAxBQKsPhW67mBQWfBbMRC0Fn2CZs=
 github.com/coderollers/go-stats v0.1.0/go.mod h1:JuocquKFYfrQlWsPBvmuLW74DUxzA8fJVaG8CXUoH/8=
+github.com/coderollers/go-utils v0.4.0 h1:ASCyX/W7eJEq/2zOcMgKkES4D7I4rJ+TAic9JlDONWA=
+github.com/coderollers/go-utils v0.4.0/go.mod h1:r3Yj7r10G9sD1vWzbQrL1r96xkNjdu1zW/s2QN8Ltf8=
 github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d/go.mod h1:maD7wRr/U5Z6m/iR4s+kqSMx2CaBsrgA7czyZG/E6dU=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
