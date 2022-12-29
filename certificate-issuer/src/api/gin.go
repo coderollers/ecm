@@ -44,6 +44,8 @@ func StartGin(ctx context.Context) {
 	userAPI := router.Group("/v1")
 	{
 		userAPI.POST("/certificate", handlers.CertificatePost)
+		userAPI.GET("/renew", handlers.RenewGet)
+		userAPI.GET("/renew/:name", handlers.RenewGet)
 	}
 
 	// Activate swagger if configured

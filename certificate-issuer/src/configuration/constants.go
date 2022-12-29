@@ -17,6 +17,7 @@ const (
 
 const (
 	VaultStateAcmeUserSubPath                  = "acme_user"
+	VaultStateCertificatesSubPath              = "certificates"
 	VaultStateCertificateConfigurationsSubPath = "certificate_configurations"
 )
 

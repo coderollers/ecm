@@ -15,9 +15,10 @@ type Configuration struct {
 	VaultStatePath     string
 
 	// Configuration
-	HttpPort    int32
-	AcmeEmail   string
-	StagingAcme bool
+	HttpPort        int32
+	AcmeEmail       string
+	StagingAcme     bool
+	HoursForRenewal int32
 
 	// Internal settings
 	CleanupTimeoutSec int32
@@ -54,4 +55,5 @@ func loadEnvironmentVariables() {
 
 	// ACME
 	appConfig.AcmeEmail = utils.EnvOrDefault("ACME_EMAIL", "")
+	appConfig.HoursForRenewal = utils.EnvOrDefaultInt32("ACME_HOURS_BEFORE_RENEWAL", 720)
 }

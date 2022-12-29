@@ -5,6 +5,8 @@ import (
 	"certificate-issuer/api/v1/model"
 	"certificate-issuer/api/v1/response"
 	"certificate-issuer/configuration"
+	"errors"
+
 	"github.com/coderollers/go-logger"
 	"github.com/coderollers/go-stats/concurrency"
 	"github.com/coderollers/go-utils"
@@ -101,9 +103,23 @@ func CertificatePost(c *gin.Context) {
 		return
 	}
 
-	errList := logic.VaultStoreCertificate(ctx, tracer, appConfig, vault, newCertConfigs, disabledCertPaths, certificates)
+	errList, fatal := logic.VaultStoreCertificate(ctx, tracer, appConfig, vault, newCertConfigs, disabledCertPaths, rr.GetNormalizedDomain(), certificates)
+	if fatal {
+		for _, err = range errList {
+			log.Errorf("%s", err)
+		}
+		response.FailureResponse(c, nil, utils.HttpError{
+			Code:    503,
+			Err:     errors.New("unrecoverable error, try again later"),
+			Message: "",
+		})
+		return
+	}
+
 	for _, err = range errList {
 		log.Warnf("%s", err)
 	}
+
+	log.Infof("certificate issued: %s", rr.GetNormalizedDomain())
 	response.SuccessResponse(c, struct{ ErrorCount int }{ErrorCount: len(errList)})
 }

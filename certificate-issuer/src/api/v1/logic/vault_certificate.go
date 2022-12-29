@@ -15,12 +15,13 @@ import (
 	"github.com/coderollers/go-utils"
 	"github.com/go-acme/lego/v4/certificate"
 	"github.com/hashicorp/vault/api"
+	"go.opentelemetry.io/otel/attribute"
 	oteltrace "go.opentelemetry.io/otel/trace"
 	"software.sslmate.com/src/go-pkcs12"
 )
 
 func VaultStoreCertificate(ctx context.Context, tracer oteltrace.Tracer, appConfig *configuration.Configuration,
-	vault *api.Client, configs []model.CertificateConfiguration, toDelete []string, certificates *certificate.Resource) []error {
+	vault *api.Client, configs []model.CertificateConfiguration, toDelete []string, normalizedDomain string, certificates *certificate.Resource) ([]error, bool) {
 	var (
 		err        error
 		errList    []error
@@ -40,7 +41,21 @@ func VaultStoreCertificate(ctx context.Context, tracer oteltrace.Tracer, appConf
 		}
 	}
 
+	span.AddEvent("Add certificate to configuration sub-path")
+	// We store the certificate within the Config secret as well for easy retrieval
+	secretData = map[string]interface{}{
+		"private": string(certificates.PrivateKey),
+		"public":  string(certificates.Certificate),
+	}
+	if _, err = vault.KVv2(appConfig.VaultEngineName).Put(ctx, fmt.Sprintf("%s/%s/%s", appConfig.VaultStatePath, configuration.VaultStateCertificatesSubPath, normalizedDomain), secretData); err != nil {
+		span.RecordError(err)
+		errList = append(errList, fmt.Errorf("error storing certificate in config subpath: %w", err))
+		// We must return here, if this fails then renewal will be impossible
+		return errList, true
+	}
+
 	for _, config := range configs {
+		span.AddEvent("Add certificate to path", oteltrace.WithAttributes(attribute.String("path", config.Path)))
 		secretData = map[string]interface{}{}
 		// TODO: #171 Support encrypted PEM certificates
 		if config.PemPrivateCertificateKey != "" && config.PemPublicCertificateKey != "" {
@@ -72,7 +87,7 @@ func VaultStoreCertificate(ctx context.Context, tracer oteltrace.Tracer, appConf
 			errList = append(errList, fmt.Errorf("error storing certificate secret %s: %w", config.Path, err))
 		}
 	}
-	return errList
+	return errList, false
 }
 
 func VaultStoreCertificateConfigurations(ctx context.Context, tracer oteltrace.Tracer, appConfig *configuration.Configuration, vault *api.Client,
@@ -163,4 +178,60 @@ func VaultReconcileCertificateConfigurations(ctx context.Context, tracer oteltra
 	log.Debugf("to disable %d configurations", len(toDelete))
 
 	return vc, toDelete
+}
+
+func VaultGetCertificate(ctx context.Context, tracer oteltrace.Tracer, appConfig *configuration.Configuration, vault *api.Client, domain string) ([]byte, []byte, error) {
+	var (
+		err     error
+		span    oteltrace.Span
+		secret  *api.KVSecret
+		private string
+		public  string
+	)
+
+	ctx, span = tracer.Start(ctx, "Get certificate from vault")
+	defer span.End()
+
+	span.AddEvent("Retrieve secret from vault")
+	if secret, err = vault.KVv2(appConfig.VaultEngineName).Get(
+		ctx, fmt.Sprintf("%s/%s/%s", appConfig.VaultStatePath, configuration.VaultStateCertificatesSubPath, domain)); err != nil && !errors.Is(err, api.ErrSecretNotFound) {
+		span.RecordError(err)
+		return nil, nil, fmt.Errorf("error retrieving acme state secret: %w", err)
+	}
+	if secret != nil {
+		private, _ = secret.Data["private"].(string)
+		public, _ = secret.Data["public"].(string)
+	} else {
+		return nil, nil, errors.New("secret data was nil, this should not happen")
+	}
+
+	return []byte(private), []byte(public), nil
+}
+
+func VaultGetCertificateList(ctx context.Context, tracer oteltrace.Tracer, appConfig *configuration.Configuration, vault *api.Client) ([]string, error) {
+	var (
+		err     error
+		span    oteltrace.Span
+		secret  *api.Secret
+		domains []string
+	)
+
+	ctx, span = tracer.Start(ctx, "Get certificate list from vault")
+	defer span.End()
+
+	span.AddEvent("Retrieve secret list from vault")
+	if secret, err = vault.Logical().ListWithContext(ctx, fmt.Sprintf("%s/metadata/%s/%s", appConfig.VaultEngineName,
+		appConfig.VaultStatePath, configuration.VaultStateCertificatesSubPath)); err != nil || secret == nil {
+		span.RecordError(err)
+		return nil, fmt.Errorf("error list secrets: %w", err)
+	}
+
+	if secret.Data != nil {
+		for _, data := range secret.Data["keys"].([]interface{}) {
+			domains = append(domains, data.(string))
+		}
+	}
+
+	return domains, nil
+
 }

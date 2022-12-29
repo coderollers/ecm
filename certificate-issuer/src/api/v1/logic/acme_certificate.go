@@ -29,3 +29,10 @@ func AcmeRequestCertificate(ctx context.Context, tracer oteltrace.Tracer, client
 
 	return cert, nil
 }
+
+func AcmeRenewCertificate(ctx context.Context, tracer oteltrace.Tracer, client *lego.Client, cert certificate.Resource) (*certificate.Resource, error) {
+	_, span := tracer.Start(ctx, "Renew a certificate via ACME")
+	defer span.End()
+
+	return client.Certificate.Renew(cert, false, false, "")
+}
